@@ -29,7 +29,7 @@ class Vector2D:
                 return Vector2D(self.x / other, self.y / other)
 
 class Grid:
-    start_pos = Vector2D(60, 60)
+    start_pos = Vector2D(0, 0)
     cell_count = 13
     cell_size = 30
 
@@ -37,6 +37,11 @@ class Grid:
 
 def screen_to_world_pos(pos: Vector2D):
     """Converts the screen position to the grid position of the game field"""
+    # 1. find the nearest cell position
+    nearest_pos_x = int(pos.x / Grid.cell_size)
+    nearest_pos_y = int(pos.y / Grid.cell_size)
+
+    return Vector2D(nearest_pos_x, nearest_pos_y)
 
 
 class Snake:
@@ -52,7 +57,7 @@ class Parts:
         self.position = start_pos
     def move(self, direction: Vector2D):
         self.position += direction
-    def render(self, screen):
+    def render(self, screen, color = (255,0,0)):
         part = pygame.Rect(self.position.x,self.position.y,10,10)
-        pygame.draw.rect(screen,(255,0,0),part)
+        pygame.draw.rect(screen,color,part)
 
