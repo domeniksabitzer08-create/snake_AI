@@ -114,10 +114,6 @@ class GameManager:
                 print("Other snake part")
                 self.game_over()
 
-
-
-
-
 class MovementManager:
     def __init__(self, first_part: Parts, speed: float, delta_time: float):
         self.direction = Vector2D(1, 0) # the direction of the first_part
