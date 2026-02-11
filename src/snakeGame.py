@@ -94,18 +94,20 @@ class MovementManager:
         self.snake = []
         self.speed = speed
         self.delta_time = delta_time
+        self.is_dir_changing = False
     def tick(self):
         time.sleep(0.1)
         # add the direction of the first part, move the part and delete the saved movement
         self.first_part.move(self.direction)
+        self.is_dir_changing = False
         for part in self.snake:
             part.movement_list.append(self.direction)
-            # if part.movement_list[0] != part.movement_list[1]: # Only for debugging
             part.move(part.movement_list[0])
             part.movement_list.pop(0)
 
     def change_direction(self, new_direction: Vector2D):
-        if self.check_movement(new_direction):
+        if self.check_movement(new_direction) and not self.is_dir_changing:
+            self.is_dir_changing = True
             self.direction = new_direction
 
     def add_part(self, part: Parts):

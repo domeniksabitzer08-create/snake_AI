@@ -51,7 +51,7 @@ part_list = []
 first_part = snakeGame.Parts(0, Vector2D(80, 52))
 movement_manager = MovementManager(first_part, 1, DeltaTime.get_delta_time()) # Todo-- delta time is static, use the Delta_time directly in the move-function of Parts class
 
-
+# Creating the first 4 pieces
 for i in range(n_starting_parts):
     part_list.append(snakeGame.Parts(i+1, Vector2D(80-(Grid.cell_size*(i+1)) , 52)))
     movement_manager.add_part(part_list[i])
@@ -72,7 +72,7 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-    if tick % 600 == 0:
+    if tick % 300 == 0:
         movement_manager.tick()
     pygame.display.update()
 
