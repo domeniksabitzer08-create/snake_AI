@@ -50,41 +50,44 @@ class DeltaTime:
         return delta_time
 
 class Grid:
-    start_pos = Vector2D(0, 0)
+    start_pos = Vector2D(100, 100)
     cell_count = 10
-    cell_size = 50
-
-
-
-def screen_to_world_pos(pos: Vector2D):
-    """Converts the screen position to the grid position of the game field"""
-    # 1. find the nearest cell position
-    nearest_pos_x = int(pos.x / Grid.cell_size)
-    nearest_pos_y = int(pos.y / Grid.cell_size)
-    return Vector2D(nearest_pos_x, nearest_pos_y)
-
+    cell_size = 30
+    cell_render_width = 10
 
 class Snake:
-    def __init__(self, start_pos: Vector2D):
-        self.position = start_pos
+    render_size = 20
 
-    def move(self, direction: Vector2D):
-        self.position += direction
+def screen_to_grid_pos(pos: Vector2D):
+    """Converts the screen position to the grid position of the game field"""
+    # find the nearest cell position
+    nearest_pos_x = int((pos.x - Grid.start_pos.x)/ Grid.cell_size)
+    nearest_pos_y = int((pos.y - Grid.start_pos.y) / Grid.cell_size)
+    return Vector2D(nearest_pos_x, nearest_pos_y)
+
+def grid_to_screen_pos(pos: Vector2D):
+    """Converts the grid position to the screen position"""
+    x = (pos.x * Grid.cell_size) + Grid.start_pos.x
+    y = (pos.y * Grid.cell_size) + Grid.start_pos.y
+    return Vector2D(x, y)
+
+
 
 class Parts:
     def __init__(self, index: int, start_pos: Vector2D):
         self.index = index
         self.position = start_pos
-        self.grid_pos = screen_to_world_pos(start_pos)
+        self.grid_pos = screen_to_grid_pos(start_pos)
         self.movement_list = []
 
     def move(self, direction: Vector2D):
         self.position += direction * Grid.cell_size
-        self.grid_pos = screen_to_world_pos(self.position)
+        self.grid_pos = screen_to_grid_pos(self.position)
 
 
     def render(self, screen, color = (255,0,0)):
-        part = pygame.Rect(self.grid_pos.x * Grid.cell_size,self.grid_pos.y * Grid.cell_size,30,30)
+
+        part = pygame.Rect(self.position.x,self.position.y,Snake.render_size,Snake.render_size)
         pygame.draw.rect(screen,color,part)
 
 class MovementManager:
@@ -123,10 +126,10 @@ class MovementManager:
     def handle_input(self):
         if pygame.key.get_pressed()[pygame.K_w]:
             self.change_direction(Vector2D.up)
-        if pygame.key.get_pressed()[pygame.K_s]:
+        elif pygame.key.get_pressed()[pygame.K_s]:
             self.change_direction(Vector2D.down)
-        if pygame.key.get_pressed()[pygame.K_d]:
+        elif pygame.key.get_pressed()[pygame.K_d]:
             self.change_direction(Vector2D.right)
-        if pygame.key.get_pressed()[pygame.K_a]:
+        elif pygame.key.get_pressed()[pygame.K_a]:
             self.change_direction(Vector2D.left)
 
