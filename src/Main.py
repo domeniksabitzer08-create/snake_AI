@@ -1,7 +1,7 @@
 import pygame
 import snakeGame
 
-from snakeGame import Vector2D, Grid, screen_to_grid_pos,grid_to_screen_pos ,DeltaTime, MovementManager
+from snakeGame import Vector2D, Grid, screen_to_grid_pos,grid_to_screen_pos ,DeltaTime, MovementManager, GameManager
 
 
 import time
@@ -43,10 +43,10 @@ def render_parts(part_list: iter):
         part.render(screen, color=(255, 255, 255))
 
 ### START ###
-start_pos_grid = Vector2D(5, 5)
+start_pos_grid = Vector2D(3, 3)
 start_pos_screen = grid_to_screen_pos(start_pos_grid)
 print(f"screen pos: {start_pos_screen} | grid pos: {start_pos_grid}")
-n_starting_parts = 3
+n_starting_parts = 5
 part_list = []
 
 first_part = snakeGame.Parts(0, start_pos_screen)
@@ -61,21 +61,25 @@ for i in range(n_starting_parts):
 
 speed = 0.01
 
+game_manager = GameManager(first_part)
+
 ### Update ###
-while running:
+while running and not game_manager.is_game_over:
 
     tick = pygame.time.get_ticks()
     clear_screen()
     show_grid()
     movement_manager.handle_input()
-    first_part.render(screen, color=(255, 255, 255))
+    first_part.render(screen, color=(0, 255, 0))
     render_parts(part_list)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-    if tick % 200 == 0:
+    if tick % 300 == 0:
         movement_manager.tick()
+        game_manager.check_border_collision()
+        game_manager.check_other_part_collision(part_list)
     pygame.display.update()
 
 

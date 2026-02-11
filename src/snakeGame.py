@@ -8,6 +8,8 @@ from fontTools.svgLib.path import PathBuilder
 from pygame.examples.go_over_there import delta_time
 
 
+
+
 ### MANAGEMENT CLASSES ###
 
 @dataclass(frozen=True)
@@ -90,6 +92,32 @@ class Parts:
         part = pygame.Rect(self.position.x,self.position.y,Snake.render_size,Snake.render_size)
         pygame.draw.rect(screen,color,part)
 
+class GameManager:
+    """Manages the game loop"""
+    def __init__(self, first_part:Parts):
+        self.first_part = first_part
+        self.score = 0
+        self.is_game_over = False
+    def game_over(self):
+        print("Game Over!")
+        self.is_game_over = True
+
+    def check_border_collision(self):
+        if self.first_part.grid_pos.x >= Grid.cell_count or self.first_part.grid_pos.x < 0:
+            self.game_over()
+        if self.first_part.grid_pos.y >= Grid.cell_count or self.first_part.grid_pos.y < 0:
+            self.game_over()
+
+    def check_other_part_collision(self, part_list: iter):
+        for part in part_list:
+            if self.first_part.grid_pos == part.grid_pos:
+                print("Other snake part")
+                self.game_over()
+
+
+
+
+
 class MovementManager:
     def __init__(self, first_part: Parts, speed: float, delta_time: float):
         self.direction = Vector2D(1, 0) # the direction of the first_part
@@ -98,15 +126,18 @@ class MovementManager:
         self.speed = speed
         self.delta_time = delta_time
         self.is_dir_changing = False
+
+
     def tick(self):
         time.sleep(0.1)
         # add the direction of the first part, move the part and delete the saved movement
         self.first_part.move(self.direction)
-        self.is_dir_changing = False
         for part in self.snake:
             part.movement_list.append(self.direction)
             part.move(part.movement_list[0])
             part.movement_list.pop(0)
+        self.is_dir_changing = False
+
 
     def change_direction(self, new_direction: Vector2D):
         if self.check_movement(new_direction) and not self.is_dir_changing:
@@ -132,4 +163,5 @@ class MovementManager:
             self.change_direction(Vector2D.right)
         elif pygame.key.get_pressed()[pygame.K_a]:
             self.change_direction(Vector2D.left)
+
 
