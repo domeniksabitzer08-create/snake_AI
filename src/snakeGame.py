@@ -4,8 +4,7 @@ from time import sleep
 import pygame
 from dataclasses import dataclass
 
-from fontTools.svgLib.path import PathBuilder
-from pygame.examples.go_over_there import delta_time
+from random import randint
 
 
 
@@ -73,6 +72,15 @@ def grid_to_screen_pos(pos: Vector2D):
     y = (pos.y * Grid.cell_size) + Grid.start_pos.y
     return Vector2D(x, y)
 
+class Food:
+    render_size = 20
+    def __init__(self, grid_pos: Vector2D):
+        self.grid_pos = grid_pos
+        self.screen_pos = grid_to_screen_pos(grid_pos)
+
+    def render(self,screen, color=(255,0,0)):
+        food = pygame.Rect(self.screen_pos.x, self.screen_pos.y, Food.render_size, Food.render_size )
+        pygame.draw.rect(screen, color, food)
 
 
 class Parts:
@@ -81,6 +89,7 @@ class Parts:
         self.position = start_pos
         self.grid_pos = screen_to_grid_pos(start_pos)
         self.movement_list = []
+        self.start_pos = start_pos
 
     def move(self, direction: Vector2D):
         self.position += direction * Grid.cell_size
@@ -94,13 +103,17 @@ class Parts:
 
 class GameManager:
     """Manages the game loop"""
-    def __init__(self, first_part:Parts):
+    def __init__(self, first_part:Parts, movement_manager:"MovementManager"):
         self.first_part = first_part
         self.score = 0
         self.is_game_over = False
+        self.fruit = None
+        self.movement_manager = movement_manager
     def game_over(self):
         print("Game Over!")
         self.is_game_over = True
+
+
 
     def check_border_collision(self):
         if self.first_part.grid_pos.x >= Grid.cell_count or self.first_part.grid_pos.x < 0:
@@ -108,11 +121,24 @@ class GameManager:
         if self.first_part.grid_pos.y >= Grid.cell_count or self.first_part.grid_pos.y < 0:
             self.game_over()
 
-    def check_other_part_collision(self, part_list: iter):
-        for part in part_list:
+    def check_other_part_collision(self):
+        for part in self.movement_manager.part_list:
             if self.first_part.grid_pos == part.grid_pos:
                 print("Other snake part")
                 self.game_over()
+
+    def spawn_fruit(self):
+        # Spawn food at random pos, if a part collides with the food try again
+        rnd_pos = Vector2D(randint(0, Grid.cell_count - 1), randint(0, Grid.cell_count - 1))
+        self.fruit = Food(rnd_pos)
+        for part in self.movement_manager.part_list:
+            if part.grid_pos == rnd_pos:
+                self.spawn_fruit()
+
+    def check_food_collision(self):
+        if self.first_part.grid_pos == self.fruit.grid_pos:
+            self.movement_manager.add_part()
+            self.spawn_fruit()
 
 class MovementManager:
     def __init__(self, first_part: Parts, speed: float, delta_time: float):
@@ -122,12 +148,14 @@ class MovementManager:
         self.speed = speed
         self.delta_time = delta_time
         self.is_dir_changing = False
+        self.part_list = []
+        self.part_list.append(first_part)
 
 
     def tick(self):
         time.sleep(0.1)
         # add the direction of the first part, move the part and delete the saved movement
-        self.first_part.move(self.direction)
+        #self.first_part.move(self.direction) # Currently commeted out because first part is now in part list
         for part in self.snake:
             part.movement_list.append(self.direction)
             part.move(part.movement_list[0])
@@ -140,9 +168,26 @@ class MovementManager:
             self.is_dir_changing = True
             self.direction = new_direction
 
-    def add_part(self, part: Parts):
-        self.snake.append(part)
-        part.movement_list.append(self.direction)
+
+    def add_part(self):
+        new_idx = len(self.snake)
+        try:
+            new_part_start_x = self.part_list[new_idx-1].grid_pos.x - self.part_list[new_idx-1].movement_list[0].x
+            new_part_start_y = self.part_list[new_idx-1].grid_pos.y - self.part_list[new_idx-1].movement_list[0].y
+            print(
+                f"No error - Index: {new_idx} | pos: {new_part_start_x}, {new_part_start_y} | Calculation: {self.part_list[new_idx - 1].grid_pos.x} - {self.part_list[new_idx-1].movement_list[0].x}")
+        except IndexError:
+            new_part_start_x = self.part_list[new_idx-1].grid_pos.x - new_idx
+            new_part_start_y = self.part_list[new_idx-1].grid_pos.y
+            print(f"Index error - Index: {new_idx} | pos: {new_part_start_x}, {new_part_start_y} | Calculation: {self.part_list[new_idx-1].grid_pos.x} - {new_idx}")
+
+        new_part_start_pos = grid_to_screen_pos(Vector2D(new_part_start_x, new_part_start_y))
+        new_part = Parts(index=new_idx, start_pos = new_part_start_pos)
+        self.snake.append(new_part)
+        new_part.movement_list.append(self.direction)
+        for i in range(new_part.index ):
+            new_part.movement_list.append(self.direction)
+        self.part_list.append(new_part)
 
     def check_movement(self, new_direction: Vector2D):
         """checks if the movement change can be executed"""

@@ -42,8 +42,12 @@ def render_parts(part_list: iter):
     for part in part_list:
         part.render(screen, color=(255, 255, 255))
 
+def render_fruit(food):
+    food.render(screen, color=(255, 0,0))
+
+
 ### START ###
-start_pos_grid = Vector2D(3, 3)
+start_pos_grid = Vector2D(0, 0)
 start_pos_screen = grid_to_screen_pos(start_pos_grid)
 print(f"screen pos: {start_pos_screen} | grid pos: {start_pos_grid}")
 n_starting_parts = 5
@@ -54,15 +58,16 @@ movement_manager = MovementManager(first_part, 1, DeltaTime.get_delta_time()) # 
 
 # Creating the first 4 pieces
 for i in range(n_starting_parts):
-    part_list.append(snakeGame.Parts(i+1, Vector2D(start_pos_screen.x-(Grid.cell_size*(i+1)) ,start_pos_screen.y)))
-    movement_manager.add_part(part_list[i])
-    for j in range(i):
-        part_list[i].movement_list.append(movement_manager.direction)
+    movement_manager.add_part()
+
+
 
 speed = 0.01
 
-game_manager = GameManager(first_part)
-
+game_manager = GameManager(first_part, movement_manager=movement_manager)
+# Spawning the first fruit manual
+game_manager.spawn_fruit()
+print(f"Fruits: {game_manager.fruit.grid_pos}")
 ### Update ###
 while running and not game_manager.is_game_over:
 
@@ -71,7 +76,9 @@ while running and not game_manager.is_game_over:
     show_grid()
     movement_manager.handle_input()
     first_part.render(screen, color=(0, 255, 0))
-    render_parts(part_list)
+    # Rendering
+    render_parts(movement_manager.part_list)
+    render_fruit(game_manager.fruit)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -79,7 +86,8 @@ while running and not game_manager.is_game_over:
     if tick % 300 == 0:
         movement_manager.tick()
         game_manager.check_border_collision()
-        game_manager.check_other_part_collision(part_list)
+        game_manager.check_other_part_collision()
+        game_manager.check_food_collision()
     pygame.display.update()
 
 
