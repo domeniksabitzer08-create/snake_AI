@@ -53,14 +53,15 @@ print(f"screen pos: {start_pos_screen} | grid pos: {start_pos_grid}")
 n_starting_parts = 5
 part_list = []
 
-first_part = snakeGame.Parts(0, start_pos_screen)
-movement_manager = MovementManager(first_part, 1, DeltaTime.get_delta_time()) # Todo-- delta time is static, use the Delta_time directly in the move-function of Parts class
+#first_part = snakeGame.Parts(0, start_pos_screen)
+movement_manager = MovementManager( 1, DeltaTime.get_delta_time()) # Todo-- delta time is static, use the Delta_time directly in the move-function of Parts class
 
 # Creating the first 4 pieces
-for i in range(n_starting_parts):
-    movement_manager.add_part()
+#for i in range(n_starting_parts):
+#    movement_manager.add_part()
 
-
+movement_manager.init_parts(n_starting_parts, Vector2D(1, 1))
+first_part = movement_manager.first_part
 
 speed = 0.01
 
@@ -85,8 +86,8 @@ while running and not game_manager.is_game_over:
             running = False
     if tick % 300 == 0:
         movement_manager.tick()
-        game_manager.check_border_collision()
-        game_manager.check_other_part_collision()
+        #game_manager.check_border_collision()
+        #game_manager.check_other_part_collision()
         game_manager.check_food_collision()
     pygame.display.update()
 

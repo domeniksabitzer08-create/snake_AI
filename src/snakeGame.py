@@ -91,13 +91,12 @@ class Parts:
         self.movement_list = []
         self.start_pos = start_pos
 
+
     def move(self, direction: Vector2D):
         self.position += direction * Grid.cell_size
         self.grid_pos = screen_to_grid_pos(self.position)
 
-
     def render(self, screen, color = (255,0,0)):
-
         part = pygame.Rect(self.position.x,self.position.y,Snake.render_size,Snake.render_size)
         pygame.draw.rect(screen,color,part)
 
@@ -141,22 +140,21 @@ class GameManager:
             self.spawn_fruit()
 
 class MovementManager:
-    def __init__(self, first_part: Parts, speed: float, delta_time: float):
+    def __init__(self,  speed: float, delta_time: float):
         self.direction = Vector2D(1, 0) # the direction of the first_part
-        self.first_part = first_part
-        self.snake = []
+        self.first_part = None
         self.speed = speed
         self.delta_time = delta_time
         self.is_dir_changing = False
         self.part_list = []
-        self.part_list.append(first_part)
+
 
 
     def tick(self):
         time.sleep(0.1)
         # add the direction of the first part, move the part and delete the saved movement
         #self.first_part.move(self.direction) # Currently commeted out because first part is now in part list
-        for part in self.snake:
+        for part in self.part_list:
             part.movement_list.append(self.direction)
             part.move(part.movement_list[0])
             part.movement_list.pop(0)
@@ -170,7 +168,7 @@ class MovementManager:
 
 
     def add_part(self):
-        new_idx = len(self.snake)
+        new_idx = len(self.part_list)
         try:
             new_part_start_x = self.part_list[new_idx-1].grid_pos.x - self.part_list[new_idx-1].movement_list[0].x
             new_part_start_y = self.part_list[new_idx-1].grid_pos.y - self.part_list[new_idx-1].movement_list[0].y
@@ -183,11 +181,25 @@ class MovementManager:
 
         new_part_start_pos = grid_to_screen_pos(Vector2D(new_part_start_x, new_part_start_y))
         new_part = Parts(index=new_idx, start_pos = new_part_start_pos)
-        self.snake.append(new_part)
+        self.part_list.append(new_part)
         new_part.movement_list.append(self.direction)
         for i in range(new_part.index ):
             new_part.movement_list.append(self.direction)
         self.part_list.append(new_part)
+
+    def init_parts(self, n_parts: int, start_grid_pos: Vector2D):
+
+        start_pos = grid_to_screen_pos(start_grid_pos)
+        for i in range(n_parts):
+            if i == 0:
+                self.first_part = Parts(index=0, start_pos=start_pos)
+                self.part_list.append(self.first_part)
+            else:
+                self.part_list.append(Parts(i, Vector2D(start_pos.x - (Grid.cell_size*i),start_pos.y)))
+
+            print(f"{i}. part pos: {self.part_list[i].start_pos.x}, {self.part_list[i].start_pos.y}")
+            for j in range(i):
+                self.part_list[i].movement_list.append(self.direction)
 
     def check_movement(self, new_direction: Vector2D):
         """checks if the movement change can be executed"""
