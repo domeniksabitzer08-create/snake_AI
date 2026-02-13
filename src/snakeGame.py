@@ -1,5 +1,7 @@
 import time
+from dbm import error
 from time import sleep
+from types import NoneType
 
 import pygame
 from dataclasses import dataclass
@@ -90,9 +92,11 @@ class Parts:
         self.grid_pos = screen_to_grid_pos(start_pos)
         self.movement_list = []
         self.start_pos = start_pos
+        self.old_pos = None
 
 
     def move(self, direction: Vector2D):
+        self.old_pos = self.position
         self.position += direction * Grid.cell_size
         self.grid_pos = screen_to_grid_pos(self.position)
 
@@ -156,7 +160,9 @@ class MovementManager:
         #self.first_part.move(self.direction) # Currently commeted out because first part is now in part list
         for part in self.part_list:
             part.movement_list.append(self.direction)
+
             part.move(part.movement_list[0])
+
             part.movement_list.pop(0)
         self.is_dir_changing = False
 
@@ -169,23 +175,30 @@ class MovementManager:
 
     def add_part(self):
         new_idx = len(self.part_list)
-        try:
-            new_part_start_x = self.part_list[new_idx-1].grid_pos.x - self.part_list[new_idx-1].movement_list[0].x
-            new_part_start_y = self.part_list[new_idx-1].grid_pos.y - self.part_list[new_idx-1].movement_list[0].y
-            print(
-                f"No error - Index: {new_idx} | pos: {new_part_start_x}, {new_part_start_y} | Calculation: {self.part_list[new_idx - 1].grid_pos.x} - {self.part_list[new_idx-1].movement_list[0].x}")
-        except IndexError:
-            new_part_start_x = self.part_list[new_idx-1].grid_pos.x - new_idx
-            new_part_start_y = self.part_list[new_idx-1].grid_pos.y
-            print(f"Index error - Index: {new_idx} | pos: {new_part_start_x}, {new_part_start_y} | Calculation: {self.part_list[new_idx-1].grid_pos.x} - {new_idx}")
+        #new_part_start_x = self.part_list[new_idx-1].grid_pos.x - self.part_list[new_idx-1].movement_list[0].x
+        #new_part_start_y = self.part_list[new_idx-1].grid_pos.y - self.part_list[new_idx-1].movement_list[0].y
+        new_part_start_x = screen_to_grid_pos(self.part_list[new_idx-1].old_pos).x
+        new_part_start_y = screen_to_grid_pos(self.part_list[new_idx-1].old_pos).y
+        print(f"Pos of the {new_idx-1} part: {self.part_list[new_idx-1].grid_pos.x} , {self.part_list[new_idx-1].grid_pos.y} | direction: {self.part_list[new_idx-1].movement_list[0]}")
+        print(f"Index: {new_idx} | pos: {new_part_start_x}, {new_part_start_y}  ")
 
         new_part_start_pos = grid_to_screen_pos(Vector2D(new_part_start_x, new_part_start_y))
         new_part = Parts(index=new_idx, start_pos = new_part_start_pos)
+
+        # Calculate the first movement of the new part,
+        first_movement = self.part_list[new_idx-1].grid_pos - new_part.grid_pos
+
+        new_part.movement_list.append(first_movement)
+        print(f"Fist Move: {new_part.movement_list[0]}")
+
+        for i in range(new_part.index):
+            if not i == 0:
+                new_part.movement_list.append(self.part_list[new_idx-1].movement_list[i-1])
+
         self.part_list.append(new_part)
-        new_part.movement_list.append(self.direction)
-        for i in range(new_part.index ):
-            new_part.movement_list.append(self.direction)
-        self.part_list.append(new_part)
+        print(f"Index {new_idx-1} | Movement list: {self.part_list[new_idx-1].movement_list}")
+        print(f"Index {new_idx} | Movement list: {new_part.movement_list}")
+
 
     def init_parts(self, n_parts: int, start_grid_pos: Vector2D):
 
@@ -216,5 +229,10 @@ class MovementManager:
             self.change_direction(Vector2D.right)
         elif pygame.key.get_pressed()[pygame.K_a]:
             self.change_direction(Vector2D.left)
+
+    def tick_input(self):
+        if pygame.key.get_pressed()[pygame.K_SPACE]:
+            return True
+
 
 

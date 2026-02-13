@@ -85,6 +85,7 @@ while running and not game_manager.is_game_over:
         if event.type == pygame.QUIT:
             running = False
     if tick % 300 == 0:
+
         movement_manager.tick()
         #game_manager.check_border_collision()
         #game_manager.check_other_part_collision()
