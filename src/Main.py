@@ -45,6 +45,11 @@ def render_parts(part_list: iter):
 def render_fruit(food):
     food.render(screen, color=(255, 0,0))
 
+### Timing Variables ###
+clock = pygame.time.Clock()
+current_time = pygame.time.get_ticks()
+last_update = 0
+update_interval = 250
 
 ### START ###
 start_pos_grid = Vector2D(0, 0)
@@ -53,14 +58,9 @@ print(f"screen pos: {start_pos_screen} | grid pos: {start_pos_grid}")
 n_starting_parts = 5
 part_list = []
 
-#first_part = snakeGame.Parts(0, start_pos_screen)
 movement_manager = MovementManager( 1, DeltaTime.get_delta_time()) # Todo-- delta time is static, use the Delta_time directly in the move-function of Parts class
 
-# Creating the first 4 pieces
-#for i in range(n_starting_parts):
-#    movement_manager.add_part()
-
-movement_manager.init_parts(n_starting_parts, Vector2D(1, 1))
+movement_manager.init_parts(n_starting_parts, Vector2D(3, 3))
 first_part = movement_manager.first_part
 
 speed = 0.01
@@ -69,10 +69,15 @@ game_manager = GameManager(first_part, movement_manager=movement_manager)
 # Spawning the first fruit manual
 game_manager.spawn_fruit()
 print(f"Fruits: {game_manager.fruit.grid_pos}")
+
+
 ### Update ###
 while running and not game_manager.is_game_over:
+    # 60 fps Rendering
+    dt = clock.tick(60)
 
     tick = pygame.time.get_ticks()
+
     clear_screen()
     show_grid()
     movement_manager.handle_input()
@@ -84,12 +89,15 @@ while running and not game_manager.is_game_over:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-    if tick % 300 == 0:
-
+    # tick based update
+    current_time = pygame.time.get_ticks()
+    if (current_time - last_update) >= update_interval:
         movement_manager.tick()
-        #game_manager.check_border_collision()
-        #game_manager.check_other_part_collision()
+        game_manager.check_border_collision()
+        game_manager.check_other_part_collision()
         game_manager.check_food_collision()
+        last_update = current_time
+
     pygame.display.update()
 
 
